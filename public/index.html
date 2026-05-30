@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Borsa Mobil Alarm İstasyonu</title>
+  <!-- Google Fonts Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Top Decorative Glowing Bars -->
+  <div class="glow-bar glow-primary"></div>
+  <div class="glow-bar glow-secondary"></div>
+
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="main-header">
+      <div class="header-logo">
+        <div class="logo-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="logo-text">
+          <h1>BORSA ALARM</h1>
+          <span class="sub-text">Mobil Push Bildirim İstasyonu</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <div class="status-badge" id="serverStatusBadge">
+          <span class="pulse-dot green"></span>
+          <span>SUNUCU AKTİF</span>
+        </div>
+        <div class="active-badge">
+          <i class="fa-solid fa-bell"></i>
+          <span id="activeAlarmsCount">0 Alarm Aktif</span>
+        </div>
+        <button class="settings-toggle-btn" id="openSettingsBtn">
+          <i class="fa-solid fa-sliders"></i> Ayarlar
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY GRID -->
+    <main class="dashboard-grid">
+      
+      <!-- LEFT COLUMN: Mobile Setup & Alarm Creator -->
+      <section class="dash-column left-column">
+        
+        <!-- MOBILE CONNECT WIZARD -->
+        <div class="glass-card wizard-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-mobile-screen-button"></i> Telefonunu Eşleştir (10 Saniye)</h3>
+            <span class="tag-status ntfy-tag">ntfy.sh</span>
+          </div>
+          <div class="wizard-steps">
+            <div class="step">
+              <span class="step-num">1</span>
+              <p>Telefonuna App Store veya Google Play'den ücretsiz <strong>ntfy</strong> uygulamasını indir.</p>
+            </div>
+            <div class="step">
+              <span class="step-num">2</span>
+              <p>Uygulamada <b>+</b> butonuna basıp şu başlığı ekle: <br><code id="mobileTopicCode">emirh-borsa-alarm</code></p>
+            </div>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn btn-secondary btn-full" id="testNotificationBtn">
+              <i class="fa-solid fa-paper-plane"></i> Telefonuma Test Bildirimi Gönder
+            </button>
+          </div>
+        </div>
+
+        <!-- DATA MANAGEMENT & BACKUP WIDGET -->
+        <div class="glass-card backup-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-database"></i> Veri Yönetimi & Yedekleme</h3>
+          </div>
+          <div class="backup-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+            <button class="btn btn-secondary" id="exportExcelBtn" style="padding: 10px 6px; font-size: 0.85rem;" title="Aktif alarmları Excel dosyası olarak indir">
+              <i class="fa-solid fa-file-excel"></i> Excel (CSV) İndir
+            </button>
+            <button class="btn btn-secondary" id="exportJsonBtn" style="padding: 10px 6px; font-size: 0.85rem;" title="Tüm sistem verilerini JSON yedek dosyası olarak indir">
+              <i class="fa-solid fa-file-code"></i> JSON Yedek Al
+            </button>
+          </div>
+          <div class="restore-wrapper">
+            <label class="btn btn-muted btn-full" style="cursor: pointer; text-align: center; display: block; margin-top: 8px;">
+              <i class="fa-solid fa-file-import"></i> JSON Yedeği Geri Yükle
+              <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- AI NEWS SYMBOLS TRACKING LIST -->
+        <div class="glass-card news-symbols-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-square-rss"></i> Yapay Zeka Haber Takip Listesi</h3>
+            <span class="badge" id="newsSymbolsCountTag">0</span>
+          </div>
+          <p class="helper-text" style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+            Buraya eklediğiniz hisse, altın veya kripto paraların Yahoo RSS haber akışları izlenir ve yeni haber bulunduğunda telefonunuza anlık özet ve kaynağıyla birlikte gönderilir.
+          </p>
+          <div class="news-symbols-container" id="newsSymbolsList" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px;">
+            <!-- Dynamically populated tracked news symbol badges -->
+            <p class="empty-text" style="font-size: 0.78rem; color: var(--text-muted); margin: 0; width: 100%;">Henüz takip listesine sembol eklenmedi. Arama yapıp listenize ekleyebilirsiniz.</p>
+          </div>
+        </div>
+
+        <!-- SEARCH & ALARM CREATOR -->
+        <div class="glass-card search-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-magnifying-glass"></i> Hisse Arama & Alarm Kur</h3>
+          </div>
+          
+          <!-- Search input -->
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="stockSearchInput" placeholder="Hisse kodu veya adı yazın... (Örn: THYAO, AAPL, BTC)">
+            <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="search-dropdown" id="searchDropdown">
+              <!-- Dynamically populated search results -->
+            </div>
+          </div>
+
+          <!-- Selected stock preview (grows when stock is loaded) -->
+          <div class="stock-preview-card" id="stockPreviewCard" style="display: none;">
+            <div class="preview-header">
+              <div class="title-area">
+                <h4 id="previewSymbol">THYAO.IS</h4>
+                <p id="previewName">TÜRK HAVA YOLLARI A.O.</p>
+              </div>
+              <div class="exchange-tag" id="previewExchange">BIST</div>
+            </div>
+            
+            <div class="preview-price-row">
+              <div class="current-price-area">
+                <span class="price-val" id="previewPrice">0.00</span>
+                <span class="price-curr" id="previewCurrency">TRY</span>
+              </div>
+              <div class="percent-badge positive" id="previewChangeBadge">
+                <i class="fa-solid fa-caret-up"></i> <span id="previewChangePercent">+0.00%</span>
+              </div>
+            </div>
+
+            <!-- RSS News Track List Toggle Button -->
+            <button type="button" class="btn btn-secondary btn-full" id="addToNewsSymbolsBtn" style="margin-bottom: 15px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.25); color: var(--color-secondary); font-weight: 600; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-square-plus" style="font-size: 1.05rem;"></i> Bu Sembolü Haber Takip Listeme Ekle
+            </button>
+
+            <!-- Alarm creation form -->
+            <form class="alarm-form" id="alarmForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="alarmType">Alarm Tipi</label>
+                  <select id="alarmType">
+                    <option value="above">Fiyat Hedefi Aşınca (>=)</option>
+                    <option value="below">Fiyat Hedefin Altına Düşünce (<=)</option>
+                    <option value="percent_up">Günlük Yükseliş Hedefi (>= %)</option>
+                    <option value="percent_down">Günlük Düşüş Hedefi (<= %)</option>
+                    <option value="range_inside">Kanalın İçindeyse (Min <= Fiyat <= Max)</option>
+                    <option value="range_outside">Kanalın Dışındaysa (Fiyat < Min veya Fiyat > Max)</option>
+                  </select>
+                </div>
+                <div class="form-group" id="singleValueGroup">
+                  <label for="alarmValue" id="alarmValueLabel">Hedef Fiyat</label>
+                  <input type="number" id="alarmValue" step="0.01" placeholder="Fiyat girin...">
+                </div>
+              </div>
+
+              <!-- Double values for Range Channel alerts -->
+              <div class="form-row" id="rangeValueGroup" style="display: none;">
+                <div class="form-group">
+                  <label for="alarmValueMin">Kanal Alt Sınırı (Min)</label>
+                  <input type="number" id="alarmValueMin" step="0.01" placeholder="Alt limit fiyatı...">
+                </div>
+                <div class="form-group">
+                  <label for="alarmValueMax">Kanal Üst Sınırı (Max)</label>
+                  <input type="number" id="alarmValueMax" step="0.01" placeholder="Üst limit fiyatı...">
+                </div>
+              </div>
+
+              <!-- Sequential Chain Alerts Lock Selection -->
+              <div class="form-group">
+                <label for="parentAlertSelect">
+                  <span>Zincir Ön Koşulu (Gelişmiş - İsteğe Bağlı)</span>
+                  <span class="helper-text">(Bu alarmın çalışması için önce seçilen alarmın tetiklenmesi gerekir)</span>
+                </label>
+                <select id="parentAlertSelect">
+                  <option value="">Ön Koşul Yok (Doğrudan takip başlasın)</option>
+                </select>
+              </div>
+
+              <!-- ROI Portfolio Tracking checkbox and fields -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="roiTrackingEnabled" style="width: auto; transform: scale(1.1); cursor: pointer; margin-top: 0;">
+                  <label for="roiTrackingEnabled" style="cursor: pointer; text-transform: none; font-size: 0.82rem; font-weight: 500; color: var(--text-primary); margin: 0;">
+                    💼 ROI & Getiri Portföy Takibi Aktif
+                  </label>
+                </div>
+              </div>
+              <div class="form-row" id="roiFieldsGroup" style="display: none; margin-bottom: 12px;">
+                <div class="form-group">
+                  <label for="purchasePrice">Maliyet (Alış Fiyatı)</label>
+                  <input type="number" id="purchasePrice" step="0.01" placeholder="Hisse alış fiyatı...">
+                </div>
+                <div class="form-group">
+                  <label for="purchaseQuantity">Portföy Adedi</label>
+                  <input type="number" id="purchaseQuantity" step="0.01" placeholder="Hisse miktarı (Adet)...">
+                </div>
+              </div>
+
+              <!-- Custom Note Description input - User Explicit Requirement -->
+              <div class="form-group">
+                <label for="alarmDescription">
+                  <span>Özel Alarm Açıklaması / Notu</span>
+                  <span class="helper-text">(Alarm çaldığında telefonunuza bu not gidecek!)</span>
+                </label>
+                <input type="text" id="alarmDescription" placeholder="Örn: Destek kırıldı, satış yap! / Direnç aşıldı, takip et!">
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full glowing-btn">
+                <i class="fa-solid fa-bell-plus"></i> Mobil Alarmı Kur
+              </button>
+            </form>
+          </div>
+
+          <div class="empty-stock-state" id="emptyStockState">
+            <div class="empty-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <p>Hisse araması yapıp seçim yaptığınızda alarm formu burada belirecektir.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: Active Alarms & Trigger History -->
+      <section class="dash-column right-column">
+        
+        <!-- ACTIVE ALARMS GRID -->
+        <div class="glass-card active-alarms-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-list-check"></i> Aktif Takip Listesi</h3>
+            <span class="badge" id="activeAlarmsCountTag">0</span>
+          </div>
+
+          <div class="alarms-list-container" id="activeAlarmsList">
+            <!-- Dynamically populated active alarms cards -->
+            <div class="empty-list-state">
+              <i class="fa-regular fa-bell-slash"></i>
+              <p>Şu an kurulu aktif alarm bulunmamaktadır.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRIGGERED HISTORY FEED -->
+        <div class="glass-card history-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Telefonunuza Giden Bildirimler</h3>
+            <button class="btn btn-clear-history" id="clearHistoryBtn">
+              <i class="fa-solid fa-trash-can"></i> Temizle
+            </button>
+          </div>
+
+          <div class="history-list-container" id="historyList">
+            <!-- Dynamically populated notification history logs -->
+            <div class="empty-list-state">
+              <i class="fa-solid fa-inbox"></i>
+              <p>Henüz tetiklenen bir alarm bildirimi bulunmamaktadır.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI NEWS & KAP STATION -->
+        <div class="glass-card news-station-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-robot"></i> Yapay Zeka Haber & KAP İstasyonu</h3>
+            <span class="tag-status ntfy-tag" id="activeNewsSymbol" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--color-secondary);">THYAO.IS</span>
+          </div>
+          
+          <div class="news-station-tabs" style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <button type="button" class="btn btn-secondary news-tab-btn active" id="tabKAP" style="padding: 8px 14px; font-size: 0.82rem; flex: 1;">
+              <i class="fa-solid fa-bullhorn"></i> KAP Bildirimleri
+            </button>
+            <button type="button" class="btn btn-secondary news-tab-btn" id="tabNews" style="padding: 8px 14px; font-size: 0.82rem; flex: 1;">
+              <i class="fa-solid fa-newspaper"></i> Genel Haberler
+            </button>
+          </div>
+          
+          <div class="news-feed-container" id="newsFeedContainer" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+            <!-- Dynamically populated news or KAP articles -->
+            <div class="empty-list-state">
+              <i class="fa-solid fa-magnifying-glass-chart"></i>
+              <p>Hisse araması yapıp bir hisse seçtiğinizde veya aktif alarmlarınız olduğunda, o hisseye özel anlık KAP bildirimleri ve genel borsa haberleri yapay zeka analizleriyle burada belirecektir.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- SETTINGS MODAL overlay -->
+  <div class="modal-overlay" id="settingsModal" style="display: none;">
+    <div class="glass-card modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-gears"></i> Uygulama & Bildirim Ayarları</h3>
+        <button class="close-modal-btn" id="closeSettingsBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Polling Interval -->
+        <div class="settings-group">
+          <label class="settings-label">
+            <span>Fiyat Sorgulama Sıklığı</span>
+            <span id="intervalVal">15 Saniye</span>
+          </label>
+          <div class="slider-wrapper">
+            <span class="side-label">5s</span>
+            <input type="range" id="pollingIntervalSlider" min="5" max="300" step="5" value="15">
+            <span class="side-label">5dk</span>
+          </div>
+          <span class="helper-text">Sorgulama sıklığı düştükçe alarmlar daha hızlı tetiklenir fakat internet kullanımınız artar.</span>
+        </div>
+
+        <!-- Notification Channel Selection -->
+        <div class="settings-group">
+          <label class="settings-label">Mobil Bildirim Yöntemi</label>
+          <div class="radio-cards-grid">
+            <div class="radio-card active" id="methodNtfyCard">
+              <div class="radio-check"><i class="fa-solid fa-circle-check"></i></div>
+              <div class="radio-icon"><i class="fa-solid fa-bolt"></i></div>
+              <div class="radio-text">
+                <strong>ntfy.sh (Kolay)</strong>
+                <span>Kayıtsız, hızlı push bildirim uygulaması</span>
+              </div>
+            </div>
+            <div class="radio-card" id="methodTelegramCard">
+              <div class="radio-check"><i class="fa-regular fa-circle"></i></div>
+              <div class="radio-icon"><i class="fa-brands fa-telegram"></i></div>
+              <div class="radio-text">
+                <strong>Telegram Bot</strong>
+                <span>Telegram sohbeti üzerinden anlık bildirim</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Template config -->
+        <div class="settings-group">
+          <label class="settings-label">Mobil Bildirim Şablonu (Format)</label>
+          <select id="notificationTemplateSelect" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; color: #fff; font-family: var(--font-family); font-size: 13px;">
+            <option value="rich_ai">🤖 Zengin Yapay Zeka Özetli (Haber ve ROI Dahil)</option>
+            <option value="minimalist">📝 Sade & Kısa Teknik Bilgi (Sembol & Fiyat)</option>
+            <option value="price_only">📊 Sadece Fiyat (Örn: AAPL: 172.50 USD)</option>
+          </select>
+          <span class="helper-text">Telefonunuza gelen push bildirim mesajının tasarımını ve doluluğunu belirler.</span>
+        </div>
+
+        <!-- ntfy.sh config -->
+        <div class="config-panel" id="ntfyConfigPanel">
+          <div class="form-group">
+            <label for="ntfyTopicInput">Özel Bildirim Kanalı İsmi (Topic)</label>
+            <div class="input-with-button">
+              <input type="text" id="ntfyTopicInput" placeholder="Kanal ismi girin...">
+              <button class="btn btn-secondary" id="randomizeTopicBtn"><i class="fa-solid fa-dice"></i> Rastgele</button>
+            </div>
+            <span class="helper-text">Kanal ismini kendinize özel, tahmin edilmesi zor bir kelime yapın.</span>
+          </div>
+        </div>
+
+        <!-- Telegram config -->
+        <div class="config-panel" id="telegramConfigPanel" style="display: none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tgTokenInput">Telegram Bot Token</label>
+              <input type="password" id="tgTokenInput" placeholder="Örn: 123456:ABC-DEF...">
+            </div>
+            <div class="form-group">
+              <label for="tgChatIdInput">Telegram Chat ID</label>
+              <input type="text" id="tgChatIdInput" placeholder="Örn: 987654321">
+            </div>
+          </div>
+          <span class="helper-text">Kendi Telegram botunuzu kurarak zengin içerikli bildirimler alabilirsiniz.</span>
+        </div>
+
+        <!-- Audio Settings -->
+        <div class="settings-group">
+          <label class="settings-label">Tarayıcı Alarm Sesi Teması</label>
+          <div class="sound-select-row">
+            <select id="soundThemeSelect">
+              <option value="digital-chime">Dijital Melodi (Yumuşak Çift Ses)</option>
+              <option value="synthwave">Synthwave Yükselişi (Retro Yaylı)</option>
+              <option value="ping">Modern Baloncuk Ping'i (Tiz Ses)</option>
+              <option value="siren">Acil Durum Pulsarı (Kritik Durum)</option>
+              <option value="none">Sessiz (Yalnızca Telefona Bildirim)</option>
+            </select>
+            <button class="btn btn-secondary" id="testSoundBtn">
+              <i class="fa-solid fa-volume-high"></i> Sesi Test Et
+            </button>
+          </div>
+        </div>
+
+        <!-- Yapay Zeka Haber Analiz Ayarları -->
+        <div class="settings-group">
+          <label class="settings-label">Yapay Zeka (AI) Haber Analizi</label>
+          <div class="form-group" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px;">
+            <input type="checkbox" id="newsAlertsEnabledToggle" style="width: auto; margin-top: 4px; transform: scale(1.2);">
+            <label for="newsAlertsEnabledToggle" style="font-size: 0.9rem; cursor: pointer; color: var(--text-muted);">
+              <strong style="color: var(--text-color); display: block; margin-bottom: 2px;">Haber Alarmlarını Aktifleştir</strong>
+              Takip ettiğim hisselere dair Yahoo RSS haberlerini izle ve telefonuma anlık bildirim at.
+            </label>
+          </div>
+          <div class="form-group" id="geminiApiKeyGroup" style="display: none;">
+            <label for="geminiApiKeyInput">Google Gemini API Anahtarı (API Key)</label>
+            <div class="input-with-button">
+              <input type="password" id="geminiApiKeyInput" placeholder="AI özeti için API anahtarınızı girin...">
+              <button class="btn btn-secondary" id="testNewsBtn"><i class="fa-solid fa-robot"></i> AI Test Et</button>
+            </div>
+            <span class="helper-text">
+              Gemini API anahtarı girildiğinde gelen borsa haberleri yapay zeka tarafından özetlenerek Türkçe duygu analiziyle (Olumlu/Olumsuz) telefonunuza iletilir. <a href="https://aistudio.google.com/" target="_blank" style="color:var(--color-primary);text-decoration:underline; font-weight: 500;">Google AI Studio'dan tamamen ücretsiz API alabilirsiniz.</a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-muted" id="cancelSettingsBtn">İptal</button>
+        <button class="btn btn-primary" id="saveSettingsBtn"><i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification-toast" id="toastAlert" style="display: none;">
+    <div class="toast-content">
+      <i class="fa-solid fa-circle-check toast-icon"></i>
+      <span class="toast-message" id="toastMessage">İşlem Başarılı!</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
