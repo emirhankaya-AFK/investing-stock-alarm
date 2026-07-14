@@ -191,7 +191,8 @@ async function sendMobileNotification(title, message, description, symbol, click
         'Priority': 'high',
         'Tags': 'chart_increasing,bell,moneybag',
         'X-Title-Encoding': 'utf-8',
-        'X-Message-Encoding': 'utf-8'
+        'X-Message-Encoding': 'utf-8',
+        'X-Markdown': 'yes'
       };
 
       if (clickUrl) {
@@ -571,14 +572,23 @@ async function checkAlarms() {
       } else if (template === 'price_only') {
         finalMsg = `${alert.symbol}: ${currentPrice.toFixed(2)} ${currentData.currency}`;
       } else {
-        // rich_ai / standard (including ROI details if present!)
+        // Detailed premium rich_ai template
+        const cleanSymbol = alert.symbol.replace('.IS', '');
+        const alertTypeLabel = alert.type === 'below' ? '📉 ALIM SEVİYESİ (DESTEK)' : '📈 KÂR ALMA HEDEFİ (DİRENÇ)';
+        
         let roiText = '';
-        if (alert.purchasePrice && alert.purchaseQuantity) {
-          const profit = (currentPrice - alert.purchasePrice) * alert.purchaseQuantity;
+        if (alert.purchasePrice) {
           const roiPct = ((currentPrice - alert.purchasePrice) / alert.purchasePrice) * 100;
-          roiText = `\n\n💼 ROI Takibi:\n📊 Kâr/Zarar: ${profit.toFixed(2)} ${currentData.currency} (% ${roiPct >= 0 ? '+' : ''}${roiPct.toFixed(2)})`;
+          roiText = `\n📊 *Gerçekleşen Kâr:* %${roiPct >= 0 ? '+' : ''}${roiPct.toFixed(2)}`;
         }
-        finalMsg = `🔔 ${triggerMsg}${roiText}`;
+        
+        finalMsg = `📢 *HİSSE BİLDİRİMİ: ${cleanSymbol}*\n` +
+                   `🏢 *Şirket:* ${alert.name || alert.symbol}\n` +
+                   `🔔 *Tür:* ${alertTypeLabel}\n` +
+                   `💵 *Güncel Fiyat:* ${currentPrice.toFixed(2)} TL\n` +
+                   `🎯 *Hedef Fiyat:* ${alert.targetValue.toFixed(2)} TL` +
+                   `${roiText}\n` +
+                   `💬 *Analiz Notu:* ${alert.description || 'Not belirtilmemiş.'}`;
       }
 
       // Trigger phone notification
