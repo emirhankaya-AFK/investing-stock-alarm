@@ -972,6 +972,7 @@ app.post('/api/news-feed/summarize', async (req, res) => {
     console.error('AI feed summary error:', error);
     res.status(500).json({ error: 'Yapay zeka analizi yapılamadı: ' + error.message });
   }
+});
 
 // REST API: Get Watchlist positions with current price cache
 app.get('/api/watchlist', async (req, res) => {
