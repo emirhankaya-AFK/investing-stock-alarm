@@ -249,12 +249,14 @@ async function init() {
   await loadAlarms();
   await loadHistory();
   await loadNewsSymbols();
+  await loadWatchlist();
 
   // Poll dashboard lists every 4 seconds to keep values fresh in UI
   setInterval(() => {
     loadAlarms();
     loadHistory();
     loadNewsSymbols();
+    loadWatchlist();
   }, 4000);
 }
 
@@ -1451,6 +1453,161 @@ tabNews.addEventListener('click', () => {
   activeNewsTab = 'news';
   renderNewsFeed();
 });
+
+// Watchlist DOM Elements and Event Bindings
+let watchlistData = [];
+
+async function loadWatchlist() {
+  try {
+    const res = await fetch('/api/watchlist');
+    if (!res.ok) throw new Error('Failed to load watchlist');
+    watchlistData = await res.json();
+    renderWatchlist();
+  } catch (error) {
+    console.error('Failed to load watchlist:', error);
+  }
+}
+
+function renderWatchlist() {
+  const wlList = document.getElementById('watchlistList');
+  const countTag = document.getElementById('watchlistCountTag');
+  const searchInput = document.getElementById('watchlistSearchInput');
+  const analystFilter = document.getElementById('analystFilterSelect');
+  
+  if (!wlList) return;
+  
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const analyst = analystFilter ? analystFilter.value : '';
+  
+  // Filter watchlistData
+  const filtered = watchlistData.filter(item => {
+    const nameMatch = item.name && item.name.toLowerCase().includes(query);
+    const tickerMatch = item.ticker && item.ticker.toLowerCase().includes(query);
+    const noteMatch = item.notes && item.notes.toLowerCase().includes(query);
+    const matchesSearch = !query || nameMatch || tickerMatch || noteMatch;
+    
+    let matchesAnalyst = true;
+    if (analyst) {
+      if (analyst === 'Oğuz') {
+        matchesAnalyst = item.notes && item.notes.includes('[Oğuz Analizi]');
+      } else if (analyst === 'Ahmet Mergen') {
+        matchesAnalyst = item.notes && item.notes.includes('[Ahmet Mergen Analizi]');
+      } else if (analyst === 'Jeremy') {
+        matchesAnalyst = item.notes && item.notes.includes('[Jeremy Analizi]');
+      } else if (analyst === 'Selçuk Gönençler') {
+        matchesAnalyst = item.notes && item.notes.includes('[Selçuk Gönençler Analizi]');
+      }
+    }
+    
+    return matchesSearch && matchesAnalyst;
+  });
+  
+  countTag.textContent = filtered.length;
+  
+  if (filtered.length === 0) {
+    wlList.innerHTML = `
+      <div class="empty-list-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>Arama kriterlerinize uygun hisse bulunamadı.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  wlList.innerHTML = '';
+  
+  filtered.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'watchlist-item-card';
+    card.style.background = 'rgba(255, 255, 255, 0.015)';
+    card.style.border = '1px solid var(--border-color)';
+    card.style.borderRadius = '10px';
+    card.style.padding = '12px';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '8px';
+    card.style.transition = 'var(--transition-smooth)';
+    
+    // Determine analyst label
+    let analystLabel = '';
+    let analystStyle = '';
+    if (item.notes && item.notes.includes('[Ahmet Mergen Analizi]')) {
+      analystLabel = 'Ahmet Mergen';
+      analystStyle = 'background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25);';
+    } else if (item.notes && item.notes.includes('[Oğuz Analizi]')) {
+      analystLabel = 'Oğuz';
+      analystStyle = 'background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25);';
+    } else if (item.notes && item.notes.includes('[Jeremy Analizi]')) {
+      analystLabel = 'Jeremy';
+      analystStyle = 'background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.25);';
+    } else if (item.notes && item.notes.includes('[Selçuk Gönençler Analizi]')) {
+      analystLabel = 'Selçuk G.';
+      analystStyle = 'background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25);';
+    }
+    
+    const formattedPrice = item.currentPrice ? formatNum(item.currentPrice) : 'Yükleniyor...';
+    const currency = item.yahoo_symbol && !item.yahoo_symbol.endsWith('.IS') ? 'USD' : 'TL';
+    
+    const noteText = item.notes ? item.notes.replace(/\[.*?\]\s*/, '') : 'Analiz notu yok.';
+    
+    let supportText = item.support ? `📉 Destek: ${formatNum(item.support)}` : '';
+    let resistanceText = item.resistance ? `📈 Direnç: ${formatNum(item.resistance)}` : '';
+    let targetText = item.profit_target_pct ? `🎯 Hedef: %${item.profit_target_pct}` : '';
+    let costText = item.entry_cost ? `💵 Alış: ${formatNum(item.entry_cost)}` : '';
+    
+    let techRow = [costText, supportText, resistanceText, targetText].filter(t => t !== '').join(' | ');
+    
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: #fff;">${item.ticker}</span>
+          <span style="font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; ${analystStyle}">${analystLabel}</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: var(--color-primary);">${formattedPrice} ${currency}</span>
+        </div>
+      </div>
+      <p style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">${item.name || item.ticker}</p>
+      ${techRow ? `<div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 6px; width: fit-content;">${techRow}</div>` : ''}
+      <p style="font-size: 0.76rem; color: var(--text-secondary); font-style: italic; line-height: 1.4; margin: 0; padding-top: 2px; border-top: 1px dashed rgba(255,255,255,0.05);">💬 ${noteText}</p>
+      <button type="button" class="btn btn-secondary btn-full" style="padding: 6px; font-size: 0.74rem; font-weight: bold; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="selectWatchlistItem('${item.ticker}', '${item.yahoo_symbol || ''}')">
+        <i class="fa-solid fa-bell"></i> Bu Hisseye Alarm Kur
+      </button>
+    `;
+    
+    wlList.appendChild(card);
+  });
+}
+
+async function selectWatchlistItem(ticker, yahooSymbol) {
+  const symbol = yahooSymbol || (ticker + (yahooSymbol ? '' : '.IS'));
+  showToast(`${symbol} seçiliyor...`);
+  try {
+    const res = await fetch(`/api/price?symbol=${encodeURIComponent(symbol)}`);
+    if (!res.ok) throw new Error('Failed to load price');
+    selectedStock = await res.json();
+    renderSelectedStock();
+    loadAINewsFeed(selectedStock.symbol);
+    
+    // Smooth scroll to search input
+    document.getElementById('stockSearchInput').scrollIntoView({ behavior: 'smooth' });
+  } catch (error) {
+    console.error('Failed to select watchlist item:', error);
+    showToast('Hisse seçilemedi.', true);
+  }
+}
+
+window.selectWatchlistItem = selectWatchlistItem;
+
+const watchlistSearchInput = document.getElementById('watchlistSearchInput');
+const analystFilterSelect = document.getElementById('analystFilterSelect');
+
+if (watchlistSearchInput) {
+  watchlistSearchInput.addEventListener('keyup', renderWatchlist);
+}
+if (analystFilterSelect) {
+  analystFilterSelect.addEventListener('change', renderWatchlist);
+}
 
 // Trigger Initialization
 window.addEventListener('DOMContentLoaded', async () => {

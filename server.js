@@ -245,6 +245,30 @@ async function sendMobileNotification(title, message, description, symbol, click
 
 // Fetch Stock Price from Yahoo Finance
 async function fetchYahooPrice(symbol) {
+  if (symbol === 'GRAMALTIN') {
+    try {
+      const goldData = await fetchYahooPrice('GC=F');
+      const usdTryData = await fetchYahooPrice('USDTRY=X');
+      if (goldData && usdTryData) {
+        const gramPrice = (goldData.price / 31.1034768) * usdTryData.price;
+        const prevClose = (goldData.previousClose / 31.1034768) * usdTryData.previousClose;
+        const change = gramPrice - prevClose;
+        const changePercent = prevClose !== 0 ? (change / prevClose) * 100 : 0;
+        return {
+          symbol: 'GRAMALTIN',
+          price: gramPrice,
+          previousClose: prevClose,
+          change: change,
+          changePercent: changePercent,
+          currency: 'TRY',
+          longName: 'Gram Altın'
+        };
+      }
+    } catch (e) {
+      console.error('Error calculating GRAMALTIN price:', e);
+    }
+    return null;
+  }
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
     const response = await fetch(url, {
@@ -947,6 +971,32 @@ app.post('/api/news-feed/summarize', async (req, res) => {
   } catch (error) {
     console.error('AI feed summary error:', error);
     res.status(500).json({ error: 'Yapay zeka analizi yapılamadı: ' + error.message });
+  }
+
+// REST API: Get Watchlist positions with current price cache
+app.get('/api/watchlist', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const wlPath = "C:\\Users\\emirh\\Desktop\\mahmut\\borsa_alarm_bot\\borsa_alarm_bot\\watchlist.json";
+    if (fs.existsSync(wlPath)) {
+      const watchlist = JSON.parse(fs.readFileSync(wlPath, 'utf8'));
+      
+      // Enrich watchlist with current cached prices
+      const enrichedWatchlist = watchlist.map(item => {
+        const symbol = item.yahoo_symbol || (item.ticker + (item.yahoo_symbol ? '' : '.IS'));
+        const price = latestGlobalPrices[symbol] || null;
+        return {
+          ...item,
+          currentPrice: price
+        };
+      });
+      res.json(enrichedWatchlist);
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    console.error('Error reading watchlist:', error);
+    res.status(500).json({ error: 'Watchlist could not be loaded' });
   }
 });
 

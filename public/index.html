@@ -241,6 +241,33 @@
       <!-- RIGHT COLUMN: Active Alarms & Trigger History -->
       <section class="dash-column right-column">
         
+        <!-- WATCHLIST PRICE LIST -->
+        <div class="glass-card watchlist-card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-chart-line"></i> Canlı Takip Listeniz (Watchlist)</h3>
+            <span class="badge" id="watchlistCountTag">0</span>
+          </div>
+          
+          <div class="watchlist-search-wrapper" style="margin-bottom: 12px; display: flex; gap: 8px;">
+            <input type="text" id="watchlistSearchInput" placeholder="Takip listenizde ara... (Örn: AMD, BIST)" style="font-size: 0.82rem; padding: 8px 12px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; width: 100%;">
+            <select id="analystFilterSelect" style="font-size: 0.82rem; padding: 8px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; min-width: 140px; cursor: pointer;">
+              <option value="">Tüm Analistler</option>
+              <option value="Selçuk Gönençler">Selçuk Gönençler</option>
+              <option value="Ahmet Mergen">Ahmet Mergen</option>
+              <option value="Oğuz">Oğuz</option>
+              <option value="Jeremy">Jeremy</option>
+            </select>
+          </div>
+
+          <div class="watchlist-list-container" id="watchlistList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Dynamically populated watchlist stock items with current prices -->
+            <div class="empty-list-state">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <p>Hisse fiyatları yükleniyor...</p>
+            </div>
+          </div>
+        </div>
+
         <!-- ACTIVE ALARMS GRID -->
         <div class="glass-card active-alarms-card">
           <div class="card-header">
