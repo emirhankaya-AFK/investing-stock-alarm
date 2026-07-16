@@ -391,6 +391,13 @@
           <span class="helper-text">Telefonunuza gelen push bildirim mesajının tasarımını ve doluluğunu belirler.</span>
         </div>
 
+        <!-- Dashboard Password Config -->
+        <div class="settings-group">
+          <label class="settings-label">Panel Giriş Şifresi</label>
+          <input type="password" id="dashboardPasswordInput" placeholder="Varsayılan: 1234" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; color: #fff; font-family: var(--font-family); font-size: 13px; width: 100%;">
+          <span class="helper-text">Web paneline şifreli erişim için kullanılacak parolayı belirler. Boş bırakırsanız şifre koruması devre dışı kalır.</span>
+        </div>
+
         <!-- ntfy.sh config -->
         <div class="config-panel" id="ntfyConfigPanel">
           <div class="form-group">
@@ -470,6 +477,23 @@
     <div class="toast-content">
       <i class="fa-solid fa-circle-check toast-icon"></i>
       <span class="toast-message" id="toastMessage">İşlem Başarılı!</span>
+    </div>
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div class="modal-overlay" id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 15, 30, 0.95); backdrop-filter: blur(15px); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="glass-card login-card" style="width: 100%; max-width: 400px; padding: 30px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.02); border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);">
+      <div class="logo-icon" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 15px;"><i class="fa-solid fa-shield-halved"></i></div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Giriş Şifresi</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Borsa Alarm İstasyonu paneline erişmek için lütfen giriş şifresini girin.</p>
+      
+      <form id="loginForm" style="display: flex; flex-direction: column; gap: 15px;">
+        <input type="password" id="loginPasswordInput" placeholder="Şifrenizi girin..." required style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
+        <button type="submit" class="btn btn-primary btn-full glowing-btn" style="padding: 12px; font-weight: 600;">
+          <i class="fa-solid fa-key"></i> Sisteme Giriş Yap
+        </button>
+      </form>
+      <p id="loginErrorMsg" style="color: var(--color-danger); font-size: 0.8rem; margin-top: 12px; display: none; font-weight: 500;"></p>
     </div>
   </div>
 

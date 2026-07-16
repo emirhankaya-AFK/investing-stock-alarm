@@ -1,3 +1,22 @@
+// Global fetch wrapper for dashboard password auth
+const originalFetch = window.fetch;
+window.fetch = async function(url, options = {}) {
+  options.headers = options.headers || {};
+  const savedPass = localStorage.getItem('dashboard_password') || '';
+  if (url.startsWith('/api')) {
+    options.headers['x-dashboard-password'] = savedPass;
+  }
+  
+  const response = await originalFetch(url, options);
+  
+  // If API returns 401 Unauthorized, show the login overlay
+  if (response.status === 401 && url.startsWith('/api') && url !== '/api/login') {
+    document.getElementById('loginModal').style.display = 'flex';
+  }
+  
+  return response;
+};
+
 // Application State
 let activeAlerts = [];
 let triggeredHistory = [];
@@ -349,6 +368,11 @@ async function loadSettings() {
     // AI & News alerts settings sync
     newsAlertsEnabledToggle.checked = appSettings.newsAlertsEnabled || false;
     geminiApiKeyInput.value = appSettings.geminiApiKey || '';
+    
+    const dashboardPasswordInput = document.getElementById('dashboardPasswordInput');
+    if (dashboardPasswordInput) {
+      dashboardPasswordInput.value = appSettings.dashboardPassword || '';
+    }
     
     if (newsAlertsEnabledToggle.checked) {
       geminiApiKeyGroup.style.display = 'block';
@@ -1242,7 +1266,8 @@ saveSettingsBtn.addEventListener('click', async () => {
     soundTheme: soundThemeSelect.value,
     newsAlertsEnabled: newsAlertsEnabledToggle.checked,
     geminiApiKey: geminiApiKeyInput.value.trim(),
-    notificationTemplate: notificationTemplateSelect.value
+    notificationTemplate: notificationTemplateSelect.value,
+    dashboardPassword: document.getElementById('dashboardPasswordInput').value.trim()
   };
 
   if (body.mobileMethod === 'ntfy' && !body.ntfyTopic) {
@@ -1264,6 +1289,7 @@ saveSettingsBtn.addEventListener('click', async () => {
     
     if (res.ok) {
       showToast('Tüm ayarlar başarıyla kaydedildi!');
+      localStorage.setItem('dashboard_password', body.dashboardPassword); // Keep logged in
       settingsModal.style.display = 'none';
       await loadSettings();
     } else {
@@ -1634,6 +1660,41 @@ if (watchlistSearchInput) {
 }
 if (analystFilterSelect) {
   analystFilterSelect.addEventListener('change', renderWatchlist);
+}
+
+// Login form handler
+const loginModal = document.getElementById('loginModal');
+const loginForm = document.getElementById('loginForm');
+const loginPasswordInput = document.getElementById('loginPasswordInput');
+const loginErrorMsg = document.getElementById('loginErrorMsg');
+
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pass = loginPasswordInput.value.trim();
+    loginErrorMsg.style.display = 'none';
+    
+    try {
+      const res = await originalFetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass })
+      });
+      
+      if (res.ok) {
+        localStorage.setItem('dashboard_password', pass);
+        loginModal.style.display = 'none';
+        showToast('Giriş başarılı!');
+        await init(); // re-init dashboard lists
+      } else {
+        loginErrorMsg.textContent = 'Hatalı şifre. Lütfen tekrar deneyin.';
+        loginErrorMsg.style.display = 'block';
+      }
+    } catch (err) {
+      loginErrorMsg.textContent = 'Giriş yapılamadı. Sunucu bağlantı hatası.';
+      loginErrorMsg.style.display = 'block';
+    }
+  });
 }
 
 // Trigger Initialization

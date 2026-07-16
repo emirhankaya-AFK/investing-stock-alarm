@@ -11,6 +11,47 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Password auth middleware for dashboard API protection
+const authMiddleware = async (req, res, next) => {
+  const publicPaths = ['/api/login', '/api/cron-check', '/api/test-notification'];
+  if (publicPaths.includes(req.path) || !req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  try {
+    const db = await loadDB();
+    const systemPassword = db.settings.dashboardPassword || '1234';
+    if (!systemPassword) {
+      return next();
+    }
+    
+    const clientPass = req.headers['x-dashboard-password'];
+    if (clientPass === systemPassword) {
+      return next();
+    }
+    
+    res.status(401).json({ error: 'Unauthorized: Geçersiz Şifre' });
+  } catch (err) {
+    next();
+  }
+};
+app.use(authMiddleware);
+
+app.post('/api/login', async (req, res) => {
+  const { password } = req.body;
+  try {
+    const db = await loadDB();
+    const systemPassword = db.settings.dashboardPassword || '1234';
+    if (password === systemPassword) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: 'Hatalı şifre' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
 // Global high-priority stocks directory (Turkey, US, Germany)

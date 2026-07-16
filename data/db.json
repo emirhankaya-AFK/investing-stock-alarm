@@ -1,6 +1,116 @@
 {
   "alerts": [
     {
+      "id": "heesjxw",
+      "symbol": "GWIND.IS",
+      "name": "Galata Wind Enerji A.Ş.",
+      "type": "above",
+      "targetValue": 25.75,
+      "description": "[Oğuz] GWIND - Kâr Hedefi: 25,75 TL direnç seviyesi -> [KÂR AL / SATIŞ Bölgesi]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "1unlep2",
+      "symbol": "GWIND.IS",
+      "name": "Galata Wind Enerji A.Ş.",
+      "type": "below",
+      "targetValue": 24.36,
+      "description": "[Oğuz] GWIND - Destek: 24,36 TL alım fırsatı marj beklentisi -> [ALIM Seviyesi Değerlendirilebilir]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "jojxvns",
+      "symbol": "SMRVA.IS",
+      "name": "Sümer Varlık Yönetimi A.Ş.",
+      "type": "above",
+      "targetValue": 13.79,
+      "description": "[Oğuz] SMRVA - Kâr Hedefi: 13,79 TL direnç seviyesi -> [KÂR AL / SATIŞ Bölgesi]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "uhs9ade",
+      "symbol": "SMRVA.IS",
+      "name": "Sümer Varlık Yönetimi A.Ş.",
+      "type": "below",
+      "targetValue": 13.05,
+      "description": "[Oğuz] SMRVA - Destek: 13,05 TL tradelik takip seviyesi -> [ALIM Seviyesi Değerlendirilebilir]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "7uvl6d3",
+      "symbol": "FONET.IS",
+      "name": "Fonet Bilgi Teknolojileri A.Ş.",
+      "type": "above",
+      "targetValue": 5.2,
+      "description": "[Oğuz] FONET - Kâr Hedefi: 5,20 TL direnç seviyesi -> [KÂR AL / SATIŞ Bölgesi]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "61fon88",
+      "symbol": "FONET.IS",
+      "name": "Fonet Bilgi Teknolojileri A.Ş.",
+      "type": "below",
+      "targetValue": 4.97,
+      "description": "[Oğuz] FONET - Destek: 4,97 TL alım seviyesi kontrolü -> [ALIM Seviyesi Değerlendirilebilir]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "5af5p3k",
+      "symbol": "ANGEN.IS",
+      "name": "Anatolia Tanı ve Biyoteknoloji Ürünleri Ar-Ge Sanayi ve Ticaret A.Ş.",
+      "type": "above",
+      "targetValue": 11.13,
+      "description": "[Oğuz] ANGEN - Kâr Hedefi: 11,13 TL direnç seviyesi -> [KÂR AL / SATIŞ Bölgesi]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "i2wdpwk",
+      "symbol": "ANGEN.IS",
+      "name": "Anatolia Tanı ve Biyoteknoloji Ürünleri Ar-Ge Sanayi ve Ticaret A.Ş.",
+      "type": "below",
+      "targetValue": 10.26,
+      "description": "[Oğuz] ANGEN - Destek: 10,26 TL'den takip seviyesi/alım -> [ALIM Seviyesi Değerlendirilebilir]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "zykfmt2",
+      "symbol": "YAYLA.IS",
+      "name": "Yayla Enerji Üretim Turizm ve İnşaat Ticaret A.Ş.",
+      "type": "above",
+      "targetValue": 24.9,
+      "description": "[Oğuz] YAYLA - Kâr Hedefi: 24,90 TL direnç seviyesi -> [KÂR AL / SATIŞ Bölgesi]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
+      "id": "4h1upmr",
+      "symbol": "YAYLA.IS",
+      "name": "Yayla Enerji Üretim Turizm ve İnşaat Ticaret A.Ş.",
+      "type": "below",
+      "targetValue": 23.52,
+      "description": "[Oğuz] YAYLA - Destek: 23,52 TL'den ekleme/alım yapılabilir. Altında stop -> [ALIM Seviyesi Değerlendirilebilir]",
+      "active": true,
+      "triggered": false,
+      "createdAt": "2026-07-16T17:03:52.484817Z"
+    },
+    {
       "id": "vaf7ulz",
       "symbol": "CL=F",
       "name": "Brent Petrol ($)",
@@ -1524,40 +1634,6 @@
       "targetValueMax": null,
       "parentAlertId": null,
       "description": "[Oğuz] VKING - Giriş maliyeti. Tradelik bakılabilir.",
-      "purchasePrice": null,
-      "purchaseQuantity": null,
-      "active": true,
-      "triggered": false,
-      "createdAt": "2026-07-14T16:33:58.264912Z"
-    },
-    {
-      "id": "ufqe6ri",
-      "symbol": "FONET.IS",
-      "name": "Fonet Bilgi Teknolojileri",
-      "type": "above",
-      "targetValue": 5.09,
-      "targetValueMin": null,
-      "targetValueMax": null,
-      "parentAlertId": null,
-      "description": "[Oğuz] FONET - %2.50 kar hedefi seviyesine ulaştı.",
-      "purchasePrice": 4.97,
-      "purchaseQuantity": 1,
-      "active": true,
-      "triggered": true,
-      "createdAt": "2026-07-14T16:33:58.264912Z",
-      "triggeredAt": "2026-07-16T10:22:27.336Z",
-      "triggerValue": 5.1
-    },
-    {
-      "id": "8wre706",
-      "symbol": "FONET.IS",
-      "name": "Fonet Bilgi Teknolojileri",
-      "type": "below",
-      "targetValue": 4.97,
-      "targetValueMin": null,
-      "targetValueMax": null,
-      "parentAlertId": null,
-      "description": "[Oğuz] FONET - Giriş maliyeti. Tradelik takip edilebilir.",
       "purchasePrice": null,
       "purchaseQuantity": null,
       "active": true,
@@ -3553,7 +3629,8 @@
     "soundTheme": "digital-chime",
     "geminiApiKey": "AIzaSyAuLYaVxYWGcwB3p6VJOWm97CdDOBKge8Y",
     "newsAlertsEnabled": true,
-    "notificationTemplate": "rich_ai"
+    "notificationTemplate": "rich_ai",
+    "dashboardPassword": "1234"
   },
   "sentNews": [
     "abef0c51-0492-36f3-a96b-61cb256871e4",
