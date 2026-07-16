@@ -105,9 +105,9 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Play Synthetic Alarm Sound Themes
+// Play Synthetic Alarm Sound Themes (Disabled by user request)
 function playAlarmSound(theme) {
-  if (theme === 'none') return;
+  return;
   
   try {
     const ctx = getAudioContext();
