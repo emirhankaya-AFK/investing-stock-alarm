@@ -206,7 +206,7 @@ async function saveDB(data) {
 
 function writeLocalDB(data) {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(DB_PATH, JSON.stringify(data), 'utf8');
   } catch (error) {
     console.error('[DB] Error writing local DB mirror:', error);
   }
