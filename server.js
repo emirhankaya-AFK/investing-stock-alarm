@@ -543,12 +543,12 @@ async function checkAlarms() {
     let isTriggered = false;
     let triggerMsg = '';
 
-    if (alert.type === 'above' && currentPrice >= alert.targetValue) {
+    if (alert.type === 'above' && currentPrice > alert.targetValue) {
       isTriggered = true;
-      triggerMsg = `Fiyat Hedefi Aşıldı: ${currentPrice.toFixed(2)} ${currentData.currency} (Hedef: >= ${alert.targetValue.toFixed(2)})`;
-    } else if (alert.type === 'below' && currentPrice <= alert.targetValue) {
+      triggerMsg = `Fiyat Hedefi Aşıldı: ${currentPrice.toFixed(2)} ${currentData.currency} (Hedef: > ${alert.targetValue.toFixed(2)})`;
+    } else if (alert.type === 'below' && currentPrice < alert.targetValue) {
       isTriggered = true;
-      triggerMsg = `Fiyat Hedefin Altına Düştü: ${currentPrice.toFixed(2)} ${currentData.currency} (Hedef: <= ${alert.targetValue.toFixed(2)})`;
+      triggerMsg = `Fiyat Hedefin Altına Düştü: ${currentPrice.toFixed(2)} ${currentData.currency} (Hedef: < ${alert.targetValue.toFixed(2)})`;
     } else if (alert.type === 'percent_up' && changePercent >= alert.targetValue) {
       isTriggered = true;
       triggerMsg = `Günlük Yükseliş Hedefi Aşıldı: %${changePercent.toFixed(2)} (Hedef: >= %${alert.targetValue.toFixed(2)})`;
