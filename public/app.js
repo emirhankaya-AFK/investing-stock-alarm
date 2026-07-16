@@ -810,6 +810,22 @@ function updateAlarmFormLabels() {
 
 alarmType.addEventListener('change', updateAlarmFormLabels);
 
+// Auto-switch Alarm Type based on input value relative to current price
+alarmValue.addEventListener('input', () => {
+  if (!selectedStock) return;
+  const type = alarmType.value;
+  if (type === 'above' || type === 'below') {
+    const val = parseFloat(alarmValue.value);
+    if (!isNaN(val)) {
+      if (val > selectedStock.price) {
+        alarmType.value = 'above';
+      } else if (val < selectedStock.price) {
+        alarmType.value = 'below';
+      }
+    }
+  }
+});
+
 // Live update selected stock price card with tick animation
 function startPreviewLivePolling() {
   if (priceUpdateInterval) clearInterval(priceUpdateInterval);
@@ -910,6 +926,17 @@ alarmForm.addEventListener('submit', async (e) => {
       showToast('Lütfen geçerli bir hedef değer girin.', true);
       return;
     }
+
+    // Safety check: Is this alert already triggered?
+    if (type === 'above' && selectedStock.price >= targetVal) {
+      const confirmTrigger = confirm(`Uyarı: Güncel fiyat (${selectedStock.price}) zaten hedef fiyat olan ${targetVal} seviyesinin üzerindedir. Bu alarm anında tetiklenecektir. Yine de kurmak istiyor musunuz?\n\n(Düşüş yönünde alarm istiyorsanız "İptal" edip Tipi "Fiyat Hedefin Altına Düşünce" olarak seçin)`);
+      if (!confirmTrigger) return;
+    }
+    if (type === 'below' && selectedStock.price <= targetVal) {
+      const confirmTrigger = confirm(`Uyarı: Güncel fiyat (${selectedStock.price}) zaten hedef fiyat olan ${targetVal} seviyesinin altındadır. Bu alarm anında tetiklenecektir. Yine de kurmak istiyor musunuz?\n\n(Yükseliş yönünde alarm istiyorsanız "İptal" edip Tipi "Fiyat Hedefi Aşınca" olarak seçin)`);
+      if (!confirmTrigger) return;
+    }
+
     payload.targetValue = targetVal;
   }
 
