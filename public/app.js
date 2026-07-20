@@ -1697,9 +1697,55 @@ if (loginForm) {
   });
 }
 
+async function loadMahmutTop5() {
+  const container = document.getElementById('mahmutTop5List');
+  if (!container) return;
+  
+  try {
+    container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Resmî BİST bülteni taranıyor...</p>`;
+    const res = await fetch('/api/scan');
+    if (!res.ok) throw new Error('Tarama servisine ulaşılamadı');
+    const data = await res.json();
+    const stocks = data.stocks || [];
+    
+    const top5 = stocks.slice(0, 5);
+    if (top5.length === 0) {
+      container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Teknik tarama sonucu bulunamadı.</p>`;
+      return;
+    }
+    
+    container.innerHTML = top5.map((s, idx) => {
+      const livePrice = s.delayedQuote?.price || s.price;
+      const recColor = s.recommendation === 'OPEN' ? 'var(--color-success)' : 'var(--color-warning)';
+      const tps = s.targets || [];
+      const tpStr = tps.map((t, i) => `TP${i+1}: ${t.toFixed(2)}`).join(' | ');
+      
+      return `
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; font-size: 0.82rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="font-size: 0.95rem; color: #fff;">${idx + 1}. ${s.ticker}</strong>
+            <span class="badge" style="background: ${recColor}; color: #000; font-weight: 700; font-size: 0.72rem;">Puan: ${s.modelScore.toFixed(1)}/100 (${s.recommendation})</span>
+          </div>
+          <div style="color: var(--text-muted); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.78rem;">
+            <span>⚡ <strong>Güncel:</strong> ${livePrice.toFixed(2)} TL</span>
+            <span>💵 <strong>Giriş:</strong> ${s.entryZoneLow?.toFixed(2)} - ${s.entryZoneHigh?.toFixed(2)} TL</span>
+            <span>🛑 <strong>Stop:</strong> ${s.stop?.toFixed(2)} TL</span>
+            <span>🎯 <strong>Hedefler:</strong> ${tpStr}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<p style="font-size:0.8rem; color:var(--color-danger);">Yükleme hatası: ${err.message}</p>`;
+  }
+}
+
+document.getElementById('refreshTop5Btn')?.addEventListener('click', loadMahmutTop5);
+
 // Trigger Initialization
 window.addEventListener('DOMContentLoaded', async () => {
   await init();
+  loadMahmutTop5();
   
   // İlk yüklemede aktif alarm varsa ilk alarmın haberlerini göster
   setTimeout(() => {

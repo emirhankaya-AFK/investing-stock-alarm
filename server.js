@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const fetch = require('node-fetch');
 
 const app = express();
@@ -11,25 +12,59 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const DB_PATH = path.join(__dirname, 'data', 'db.json');
+const WATCHLIST_PATH = path.join(__dirname, 'data', 'watchlist.json');
+
+// SHA-256 password hashing helper
+function hashPassword(pass) {
+  if (!pass) return '';
+  return crypto.createHash('sha256').update(String(pass)).digest('hex');
+}
+
+// Strict Crypto Symbol Checker
+function isCryptoSymbol(symbol) {
+  const upper = String(symbol || '').toUpperCase();
+  return upper.includes('BTC') || upper.includes('ETH') || upper.includes('USDT') || upper.includes('SOL') || upper.includes('XRP');
+}
+
 // Password auth middleware for dashboard API protection
 const authMiddleware = async (req, res, next) => {
-  const publicPaths = ['/api/login', '/api/cron-check', '/api/test-notification'];
+  const publicPaths = ['/api/login', '/api/test-notification'];
   if (publicPaths.includes(req.path) || !req.path.startsWith('/api')) {
     return next();
   }
-  
+
+  // Handle protected Cron endpoint
+  if (req.path === '/api/cron-check') {
+    const cronSecret = process.env.CRON_SECRET || 'secret-cron-key-8a2f9b4c';
+    const clientSecret = req.headers['x-cron-secret'] || req.query.secret;
+    if (clientSecret === cronSecret) {
+      return next();
+    }
+    return res.status(401).json({ error: 'Unauthorized: Geçersiz Cron Secret' });
+  }
+
   try {
     const db = await loadDB();
-    const systemPassword = db.settings.dashboardPassword || '1234';
-    if (!systemPassword) {
+    const envPassword = process.env.DASHBOARD_PASSWORD;
+    const storedHash = db.settings.dashboardPasswordHash || (db.settings.dashboardPassword ? hashPassword(db.settings.dashboardPassword) : null);
+    
+    // If no password is configured anywhere, allow first setup
+    if (!storedHash && !envPassword) {
       return next();
     }
-    
+
     const clientPass = req.headers['x-dashboard-password'];
-    if (clientPass === systemPassword) {
+    const clientHash = hashPassword(clientPass);
+
+    if (envPassword && clientPass === envPassword) {
       return next();
     }
-    
+
+    if (storedHash && (clientHash === storedHash || clientPass === db.settings.dashboardPassword)) {
+      return next();
+    }
+
     res.status(401).json({ error: 'Unauthorized: Geçersiz Şifre' });
   } catch (err) {
     next();
@@ -41,15 +76,56 @@ app.post('/api/login', async (req, res) => {
   const { password } = req.body;
   try {
     const db = await loadDB();
-    const systemPassword = db.settings.dashboardPassword || '1234';
-    if (password === systemPassword) {
-      res.json({ success: true });
-    } else {
-      res.status(401).json({ error: 'Hatalı şifre' });
+    const envPassword = process.env.DASHBOARD_PASSWORD;
+    const storedHash = db.settings.dashboardPasswordHash || (db.settings.dashboardPassword ? hashPassword(db.settings.dashboardPassword) : null);
+    
+    const clientHash = hashPassword(password);
+
+    if (envPassword && password === envPassword) {
+      return res.json({ success: true });
     }
+
+    if (storedHash && (clientHash === storedHash || password === db.settings.dashboardPassword)) {
+      return res.json({ success: true });
+    }
+
+    res.status(401).json({ error: 'Hatalı şifre' });
   } catch (err) {
     res.status(500).json({ error: 'Sunucu hatası' });
   }
+});
+
+// REST API: Portable Watchlist Endpoint
+app.get('/api/watchlist', async (req, res) => {
+  try {
+    if (fs.existsSync(WATCHLIST_PATH)) {
+      const data = fs.readFileSync(WATCHLIST_PATH, 'utf8');
+      res.json(JSON.parse(data));
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Watchlist okunamadı' });
+  }
+});
+
+// REST API: Mahmut Fibo-Scalp Pro Technical Scan Entegrasyonu
+app.get('/api/scan', async (req, res) => {
+  const { exec } = require('child_process');
+  const cmd = `python -c "import sys; sys.path.append(r'C:\\Users\\emirh\\Desktop\\Kodlar\\chartist-fibo-scalp-pro'); from market_scanner import scan_market; import json; print(json.dumps(scan_market()))"`;
+  
+  exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+    if (err) {
+      console.error('[ScanAPI] Error executing Python market_scanner:', err);
+      return res.status(503).json({ status: 'error', message: 'Teknik tarama çalıştırılamadı' });
+    }
+    try {
+      const data = JSON.parse(stdout);
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({ status: 'error', message: 'JSON ayrıştırma hatası' });
+    }
+  });
 });
 
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
@@ -812,6 +888,10 @@ app.post('/api/alerts', async (req, res) => {
   const { symbol, name, type, targetValue, targetValueMin, targetValueMax, parentAlertId, description, purchasePrice, purchaseQuantity } = req.body;
   if (!symbol || !name || !type) {
     return res.status(400).json({ error: 'Missing alert details' });
+  }
+
+  if (isCryptoSymbol(symbol)) {
+    return res.status(400).json({ error: 'Kripto paralar sistem tarafından engellenmiştir. Yalnızca BIST ve Emtia kabul edilir.' });
   }
 
   const db = await loadDB();
